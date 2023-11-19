@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>My test page</title>
+  </head>
+  <body>
+    <input type="text" id="search">
+    <button onclick="searchResults()"> Search</button>
+    <button id="numbers" style="border: 2px solid; border-color: red;" onclick="showNumbers()">Show numbering</button>
+    <input type="text" id="api" placeholder="Paste your api key if rate limit for mine is exceeded">
+    <a href="https://www.last.fm/api/account/create" style="color: #bbbbbb; text-decoration: underline; margin: -10px; font-size: 90%;">Get your api key</a>
+
+    <script>
+      function showNumbers() {
+        const a = document.querySelector('#numbers');
+        if (a.style.borderColor == "red") {
+          a.style.borderColor = "green"
+        }
+        else {
+          a.style.borderColor = "red"
+        }
+      }
+      
+      function searchResults() {
+        const prevResults = document.querySelectorAll('.track');
+        
+        const search = document.querySelector('#search').value;
+        
+        prevResults.forEach(track => {
+          track.remove();
+        });
+        const prevFound = document.querySelector('#found');
+        if (prevFound != null) 
+          prevFound.remove();
+
+        let apiKey = 'b232418f74787beb124e0ddda1a80fcb'
+        const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=10000&format=json`;
+
+        fetch(apiUrl)
+        .then(response => {         
+          // Parse the JSON response
+          return response.json();
+        })
+        .then(data => {
+          // Do something with the parsed JSON data
+          if (data.message != null) {
+            alert(data.message)
+          }
+          
+          let array1 = data.results.trackmatches.track;
+          const found = document.createElement('div');
+          found.id = 'found';
+          found.textContent = `Found ${data.results["opensearch:totalResults"]} results (note that it's impossible to get more than 10000)`;
+          document.body.appendChild(found);
+          
+          const a = document.querySelector('#numbers');
+          
+          array1.forEach((track, i) => {
+            console.log(track);
+            
+            const div = document.createElement('div');
+            
+            if (a.style.borderColor == "green"){
+              div.textContent = (i+1)+')'
+            }
+            
+            const link = document.createElement('a');
+
+                // Set the href attribute to the URL you want to link to
+            link.href = track.url; // Replace with your desired URL
+
+                // Set the text content of the anchor tag
+            link.textContent = track.artist + ' - ' + track.name;
+            div.appendChild(link);
+            
+            div.classList.add("track");
+            document.body.appendChild(div);
+          });
+        })
+        .catch(error => {
+          // Handle any errors that occur during the fetch
+          console.error('Fetch error:', error);
+        });
+      }
+      
+    </script>
+    <style>
+      /* Set the body background to blue-ish */
+      body {
+        background-color: #15202b; /* dark blue-ish color */
+        color: white; /* text color */
+        font-family: Arial, sans-serif; /* default font with good readability */
+      }
+
+      /* Set the links to be white with padding */
+      a {
+        color: white;
+        margin: 10px; /* add padding for better touch/click experience */
+        text-decoration: none; /* remove underline from links */
+      }
+
+      #api {
+        width: 310px;
+      }
+
+      input[type="text"],
+      input[type="checkbox"],
+      button {
+        margin: 12px; /* add padding to textboxes and buttons */
+        padding: 6px;
+        border: none; /* remove default borders */
+        background-color: #37474f; /* dark gray for textboxes and buttons */
+        color: white; /* text color */
+        border-radius: 3px; /* add some rounded corners */
+      }
+
+      button:hover {
+        background-color: #5588a3; /* lighter blue for hover effect */
+        cursor: pointer; /* change cursor to pointer on hover */
+      }
+
+      button:active {
+        transform: translateY(1px); /* Move the button 1px down when clicked */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        background-color: #3d6074
+      }
+
+      /* Style text inside divs */
+      div {
+        color: #bbbbbb; /* slightly lighter color than white */
+        margin: 12px;
+        font-size: 90%; /* make the font slightly smaller than the default */
+      }
+
+      ::placeholder {
+        color: #bbbbbb; /* slightly lighter color than white */
+        opacity: 1; /* Firefox */
+      }
+
+      ::-ms-input-placeholder { /* Edge 12 -18 */
+        color: #bbbbbb; /* slightly lighter color than white */
+      }
+    </style>
+  </body>
+</html>
