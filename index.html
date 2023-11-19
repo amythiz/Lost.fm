@@ -9,7 +9,7 @@
     <input type="text" id="search">
     <button onclick="searchResults()"> Search</button>
     <button id="numbers" style="border: 2px solid; border-color: red;" onclick="showNumbers()">Show numbering</button>
-    <input type="text" id="api" placeholder="Paste your api key if there are problems mine">
+    <input type="text" id="api" placeholder="Paste your api key if there are problems with mine">
     <a href="https://www.last.fm/api/account/create" style="color: #bbbbbb; text-decoration: underline; margin: -10px; font-size: 90%;">Get your api key</a>
 
     <script>
@@ -24,9 +24,16 @@
       }
       
       function searchResults() {
-        const prevResults = document.querySelectorAll('.track');
+        const searching = document.createElement('div');
+        searching.id = 'searching';
+        searching.textContent = "Searching...";
+        document.body.appendChild(searching); 
         
-        const search = document.querySelector('#search').value;
+        const prevResults = document.querySelectorAll('.track');       
+        let search = document.querySelector('#search').value;
+        if (search == "") {
+          search = " ";
+        }
         
         prevResults.forEach(track => {
           track.remove();
@@ -34,22 +41,30 @@
         const prevFound = document.querySelector('#found');
         if (prevFound != null) 
           prevFound.remove();
+        
 
-        let apiKey = 'b232418f74787beb124e0ddda1a80fcb'
+        let apiKey = 'b232418f74787beb124e0ddda1a80fcb';
+        const newApiKey = document.querySelector('#api').value;
+        if (newApiKey != "") {
+          apiKey = newApiKey
+        }
+
         const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=10000&format=json`;
 
         fetch(apiUrl)
         .then(response => {         
-          // Parse the JSON response
           return response.json();
         })
         .then(data => {
-          // Do something with the parsed JSON data
           if (data.message != null) {
-            alert(data.message)
+            alert(data.message);
+            searching.remove();
           }
           
           let array1 = data.results.trackmatches.track;
+
+          searching.remove();
+
           const found = document.createElement('div');
           found.id = 'found';
           found.textContent = `Found ${data.results["opensearch:totalResults"]} results (note that it's impossible to get more than 10000)`;
@@ -68,10 +83,8 @@
             
             const link = document.createElement('a');
 
-                // Set the href attribute to the URL you want to link to
-            link.href = track.url; // Replace with your desired URL
+            link.href = track.url;
 
-                // Set the text content of the anchor tag
             link.textContent = track.artist + ' - ' + track.name;
             div.appendChild(link);
             
@@ -80,25 +93,22 @@
           });
         })
         .catch(error => {
-          // Handle any errors that occur during the fetch
           console.error('Fetch error:', error);
         });
       }
       
     </script>
     <style>
-      /* Set the body background to blue-ish */
       body {
-        background-color: #15202b; /* dark blue-ish color */
-        color: white; /* text color */
-        font-family: Arial, sans-serif; /* default font with good readability */
+        background-color: #15202b;
+        color: white;
+        font-family: Arial, sans-serif;
       }
 
-      /* Set the links to be white with padding */
       a {
         color: white;
-        margin: 10px; /* add padding for better touch/click experience */
-        text-decoration: none; /* remove underline from links */
+        margin: 10px;
+        text-decoration: none;
       }
 
       #api {
@@ -108,39 +118,38 @@
       input[type="text"],
       input[type="checkbox"],
       button {
-        margin: 12px; /* add padding to textboxes and buttons */
+        margin: 12px;
         padding: 6px;
-        border: none; /* remove default borders */
-        background-color: #37474f; /* dark gray for textboxes and buttons */
-        color: white; /* text color */
-        border-radius: 3px; /* add some rounded corners */
+        border: none;
+        background-color: #37474f;
+        color: white;
+        border-radius: 3px;
       }
 
       button:hover {
-        background-color: #5588a3; /* lighter blue for hover effect */
-        cursor: pointer; /* change cursor to pointer on hover */
+        background-color: #5588a3;
+        cursor: pointer;
       }
 
       button:active {
-        transform: translateY(1px); /* Move the button 1px down when clicked */
+        transform: translateY(1px);
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         background-color: #3d6074
       }
 
-      /* Style text inside divs */
       div {
-        color: #bbbbbb; /* slightly lighter color than white */
+        color: #bbbbbb;
         margin: 12px;
-        font-size: 90%; /* make the font slightly smaller than the default */
+        font-size: 90%;
       }
 
       ::placeholder {
-        color: #bbbbbb; /* slightly lighter color than white */
-        opacity: 1; /* Firefox */
+        color: #bbbbbb;
+        opacity: 1;
       }
 
-      ::-ms-input-placeholder { /* Edge 12 -18 */
-        color: #bbbbbb; /* slightly lighter color than white */
+      ::-ms-input-placeholder {
+        color: #bbbbbb;
       }
     </style>
   </body>
