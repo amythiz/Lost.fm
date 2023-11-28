@@ -95,10 +95,10 @@
 
         let i = 0;
         array1.forEach((track) => {           
-          if (track.listeners > maxListeners && maxListeners != "") {
+          if ((maxListeners != "") && (parseInt(track.listeners, 10) > parseInt(maxListeners, 10))) {
             return;
           }
-          if (track.listeners < minListeners && minListeners != "") {
+          if ((minListeners != "") && (parseInt(track.listeners, 10) < parseInt(minListeners, 10))) {
             return;
           }
           
