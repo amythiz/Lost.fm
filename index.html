@@ -7,102 +7,145 @@
   </head>
   <body>
     <input type="text" id="search">
-    <button onclick="searchResults()"> Search</button>
-    <button id="numbers" style="border: 2px solid; border-color: red;" onclick="showNumbers()">Show numbering</button>
-    <input type="text" id="api" placeholder="Paste your api key if there are problems with mine">
+    <button id="search-btn" onclick="searchResults()"> Search</button>
+    <hr/>
+    <button class="options" id="numbers" style="border: 2px solid; border-color: red;" onclick="redGreen(this)">Show numbering</button>
+    <button class="options" id="listeners" style="border: 2px solid; border-color: red;" onclick="redGreen(this)">Show listeners</button>
+    <input type="text" id="min-listeners" title="Min listeners" placeholder="Min listeners"> -
+    <input type="text" id="max-listeners" title="Max listeners" placeholder="Max listeners">
+    
+    <hr/>
+    <input type="text" id="api" title="Paste your api key if there are problems with mine" placeholder="Paste your api key if there are problems with mine">
     <a href="https://www.last.fm/api/account/create" style="color: #bbbbbb; text-decoration: underline; margin: -10px; font-size: 90%;">Get your api key</a>
 
     <script>
-      function showNumbers() {
-        const a = document.querySelector('#numbers');
-        if (a.style.borderColor == "red") {
-          a.style.borderColor = "green"
+      function redGreen(btn) {
+        if (btn.style.borderColor == "red") {
+          btn.style.borderColor = "green"
         }
         else {
-          a.style.borderColor = "red"
+          btn.style.borderColor = "red"
         }
       }
       
-      function searchResults() {
+      let SearchInProgress = false;
+      async function searchResults() {   
+        if (SearchInProgress) {
+          return;
+        }
+        
+        SearchInProgress = true;
+        const prevSearching = document.querySelectorAll('#searching');
+        prevSearching.forEach(elem => {
+          elem.remove();
+        });
+        const prevResults = document.querySelectorAll('.track'); 
+        prevResults.forEach(track => {
+          track.remove();
+        });
+        const prevFound = document.querySelectorAll('#found');
+        prevFound.forEach(elem => {
+          elem.remove();
+        });
+        const prevFileLink = document.querySelectorAll('#filelink');
+        prevFileLink.forEach(elem => {
+          elem.remove();
+        });
+        let str = "";
+
         const searching = document.createElement('div');
         searching.id = 'searching';
         searching.textContent = "Searching...";
         document.body.appendChild(searching); 
-        
-        const prevResults = document.querySelectorAll('.track');       
+              
         let search = document.querySelector('#search').value;
         if (search == "") {
           search = " ";
         }
         
-        prevResults.forEach(track => {
-          track.remove();
-        });
-        const prevFound = document.querySelector('#found');
-        if (prevFound != null) 
-          prevFound.remove();
-        
-
         let apiKey = 'b232418f74787beb124e0ddda1a80fcb';
         const newApiKey = document.querySelector('#api').value;
         if (newApiKey != "") {
           apiKey = newApiKey
         }
 
-        const apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=10000&format=json`;
+        let apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=10000&format=json`;
 
-        fetch(apiUrl)
-        .then(response => {         
-          return response.json();
-        })
-        .then(data => {
-          if (data.message != null) {
-            alert(data.message);
-            searching.remove();
+        let response = await fetch(apiUrl);
+        let data = await response.json();
+
+        if (data.message != null) {
+          searching.remove();
+          alert(data.message);
+        }
+          
+        let array1 = data.results.trackmatches.track;
+
+        searching.remove();
+
+        const found = document.createElement('div');
+        found.id = 'found';
+        document.body.appendChild(found);
+          
+        const a = document.querySelector('#numbers');
+        const b = document.querySelector('#listeners');
+
+        const maxListeners = document.querySelector('#max-listeners').value;
+        const minListeners = document.querySelector('#min-listeners').value;
+
+        let i = 0;
+        array1.forEach((track) => {           
+          if (track.listeners > maxListeners && maxListeners != "") {
+            return;
+          }
+          if (track.listeners < minListeners && minListeners != "") {
+            return;
           }
           
-          let array1 = data.results.trackmatches.track;
-
-          searching.remove();
-
-          const found = document.createElement('div');
-          found.id = 'found';
-          found.textContent = `Found ${data.results["opensearch:totalResults"]} results (note that it's impossible to get more than 10000)`;
-          document.body.appendChild(found);
-          
-          const a = document.querySelector('#numbers');
-          
-          array1.forEach((track, i) => {
-            console.log(track);
+          const div = document.createElement('div');
             
-            const div = document.createElement('div');
+          if (a.style.borderColor == "green") {
+            div.textContent = (i+1)+')'
+          }
             
-            if (a.style.borderColor == "green"){
-              div.textContent = (i+1)+')'
-            }
-            
-            const link = document.createElement('a');
+          const link = document.createElement('a');
+          link.href = track.url;
+          link.target="_blank";
+          link.rel="noopener noreferrer"
+          str += `${track.artist} - ${track.name}\n`;
+          link.textContent = track.artist + ' - ' + track.name;
+          div.appendChild(link);
 
-            link.href = track.url;
-
-            link.textContent = track.artist + ' - ' + track.name;
-            div.appendChild(link);
+          if (b.style.borderColor == "green") {
+            div.innerHTML += `${track.listeners} listeners`  
+          }
             
-            div.classList.add("track");
-            document.body.appendChild(div);
-          });
-        })
-        .catch(error => {
-          console.error('Fetch error:', error);
+          div.classList.add("track");
+          document.body.appendChild(div);
+          i++;
         });
+        found.textContent = `Found ${data.results["opensearch:totalResults"]} results (${i} are shown). Note that it's impossible to get more than 10000`;
+
+        const file = new Blob([str], { type: 'text/plain' });
+        const fileLink = document.createElement("a");
+        const searchBtn = document.querySelector("#search-btn");
+        fileLink.textContent = "Download results as .txt";
+        fileLink.id = "filelink";
+        fileLink.style["font-size"] = "90%";
+        fileLink.href = URL.createObjectURL(file);
+        fileLink.download = "songs.txt";
+        searchBtn.after(fileLink);
+
+        SearchInProgress = false;
       }
-      
     </script>
+    
     <style>
       body {
         background-color: #15202b;
         color: white;
         font-family: Arial, sans-serif;
+        text-wrap: wrap;
       }
 
       a {
@@ -115,10 +158,30 @@
         width: 310px;
       }
 
+      #max-listeners,
+      #min-listeners {
+        width: 80px;
+      }
+
+      hr {
+        width: 100%;
+        border: 1px solid #37474f;
+      }
+
+      .options {
+        margin-right: -5px;
+      }
+
+      #search-btn {
+        margin-left: -3px;
+      }
+
       input[type="text"],
-      input[type="checkbox"],
       button {
-        margin: 12px;
+        margin-right: 12px;
+        margin-left: 12px;
+        margin-top: 7px;
+        margin-bottom: 5px;
         padding: 6px;
         border: none;
         background-color: #37474f;
