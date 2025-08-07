@@ -87,7 +87,9 @@
       if (!data.results?.trackmatches?.track?.length) {
         break;
       }
-  
+      if (page == 1) {
+      	tracks_amount = data.results["opensearch:totalResults"];
+      } 
       array1 = array1.concat(data.results.trackmatches.track);
     } catch (error) {
       console.error("Error:", page, error);
@@ -138,7 +140,7 @@
           document.body.appendChild(div);
           i++;
         });
-        found.textContent = `Found ${data.results["opensearch:totalResults"]} results (${i} are shown). Note that it's impossible to get more than 10000`;
+        found.textContent = `Found ${tracks_amount} results (${i} are shown). Note that it's impossible to get more than 10000`;
 
         const file = new Blob([str], { type: 'text/plain' });
         const fileLink = document.createElement("a");
