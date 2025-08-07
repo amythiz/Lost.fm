@@ -69,17 +69,31 @@
           apiKey = newApiKey
         }
 
-        let apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=10000&format=json`;
+  let array1 = [];
 
-        let response = await fetch(apiUrl);
-        let data = await response.json();
-
-        if (data.message != null) {
-          searching.remove();
-          alert(data.message);
-        }
-          
-        let array1 = data.results.trackmatches.track;
+  for (let page = 1; page <= 10; page++) {
+    let apiUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${search}&api_key=${apiKey}&limit=1000&page=${page}&format=json`;
+  
+    try {
+      let response = await fetch(apiUrl);
+      let data = await response.json();
+  
+      if (data.message != null) {
+        searching.remove();
+        alert(data.message);
+        break; 
+      }
+  
+      if (!data.results?.trackmatches?.track?.length) {
+        break;
+      }
+  
+      array1 = array1.concat(data.results.trackmatches.track);
+    } catch (error) {
+      console.error("Error:", page, error);
+      break; 
+    }
+  }
 
         searching.remove();
 
